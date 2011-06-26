@@ -719,7 +719,7 @@ static errr Term_wipe_gcu(int x, int y, int n)
  * character on this system. Currently
  */
  static byte Term_xchar_gcu(byte c)
- {
+{
 	return c;
 }
 
