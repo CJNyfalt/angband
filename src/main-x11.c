@@ -2662,16 +2662,16 @@ errr init_x11(int argc, char **argv)
 			{
 				/* Count lines */
 				line++;
-	
+
 				/* Skip "empty" lines */
 				if (!buf[0]) continue;
-	
+
 				/* Skip "blank" lines */
 				if (isspace((unsigned char)buf[0])) continue;
-	
+
 				/* Skip comments */
 				if (buf[0] == '#') continue;
-	
+
 				/* Number of terminal windows */
 				if (prefix(buf, "TERM_WINS"))
 				{
@@ -2681,7 +2681,7 @@ errr init_x11(int argc, char **argv)
 					continue;
 				}
 			}
-	
+
 			/* Close */
 			(void)file_close(fff);
 		}

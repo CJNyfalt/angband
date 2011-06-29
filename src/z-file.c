@@ -183,7 +183,7 @@ static void path_process(char *buf, size_t len, size_t *cur_len, const char *pat
 /*
  * Create a new path string by appending a 'leaf' to 'base'.
  *
- * On Unixes, we convert a tidle at the beginning of a basename to mean the
+ * On Unixes, we convert a tilde at the beginning of a basename to mean the
  * directory, complicating things a little, but better now than later.
  *
  * Remember to free the return value.
@@ -203,7 +203,7 @@ size_t path_build(char *buf, size_t len, const char *base, const char *leaf)
 
 
 	/*
-	 * If the leafname starts with the seperator,
+	 * If the leafname starts with the separator,
 	 *   or with the tilde (on Unix),
 	 *   or there's no base path,
 	 * We use the leafname only.
@@ -685,7 +685,7 @@ bool dir_create(const char *path)
 	if (isalpha(path[0]) && path[1] == ':') path += 2;
 	#endif
 
-	/* Iterate through the path looking for path segements. At each step,
+	/* Iterate through the path looking for path segments. At each step,
 	 * create the path segment if it doesn't already exist. */
 	for (ptr = path; *ptr; ptr++)
 	{
@@ -740,8 +740,8 @@ ang_dir *my_dopen(const char *dirname)
 {
 	WIN32_FIND_DATA fd;
 	HANDLE h;
-   	ang_dir *dir;
-	
+	ang_dir *dir;
+
 	/* Try to open it */
 	h = FindFirstFile(format("%s\\*", dirname), &fd);
 
@@ -830,7 +830,7 @@ ang_dir *my_dopen(const char *dirname)
 
 	/* Allocate memory for the handle */
 	dir = ZNEW(ang_dir);
-	if (!dir) 
+	if (!dir)
 	{
 		closedir(d);
 		return NULL;
@@ -858,8 +858,8 @@ bool my_dread(ang_dir *dir, char *fname, size_t len)
 		entry = readdir(dir->d);
 		if (!entry) return FALSE;
 
-		path_build(path, sizeof path, dir->dirname, entry->d_name);
-            
+		path_build(path, sizeof(path), dir->dirname, entry->d_name);
+
 		/* Check to see if it exists */
 		if (stat(path, &filedata) != 0)
 			continue;

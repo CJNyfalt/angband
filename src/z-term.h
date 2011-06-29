@@ -323,7 +323,7 @@ struct term
 
 /*
  * Maximum number of colours, and number of "basic" Angband colours
- */ 
+ */
 #define MAX_COLORS        256
 #define BASIC_COLORS    28
 

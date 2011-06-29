@@ -417,11 +417,11 @@ void do_gcu_resize(void)
 {
 	int i, rows, cols, y, x;
 	term *old_t = Term;
-	
+
 	for (i = 0; i < MAX_TERM_DATA; i++) {
 		/* If we're using a big screen, we only care about Term-0 */
 		if (use_big_screen && i > 0) break;
-		
+
 		/* Activate the current Term */
 		Term_activate(&data[i].t);
 
@@ -896,7 +896,7 @@ errr init_gcu(int argc, char **argv)
 #ifdef A_COLOR
 	/* Do we have color, and enough color, available? */
 	can_use_color = ((start_color() != ERR) && has_colors() &&
-					 (COLORS >= 8) && (COLOR_PAIRS >= 8));
+			 (COLORS >= 8) && (COLOR_PAIRS >= 8));
 
 #ifdef HAVE_USE_DEFAULT_COLORS
 	/* Should we use curses' "default color" */
@@ -974,16 +974,16 @@ errr init_gcu(int argc, char **argv)
 		 * then we'll put the whole screen in term 0; otherwise we'll divide
 		 * it amongst the available terms */
 		get_gcu_term_size(i, &rows, &cols, &y, &x);
-		
+
 		/* Skip non-existant windows */
 		if (rows <= 0 || cols <= 0) continue;
-		
+
 		/* Create a term */
 		term_data_init_gcu(&data[next_win], rows, cols, y, x);
-		
+
 		/* Remember the term */
 		angband_term[next_win] = &data[next_win].t;
-		
+
 		/* One more window */
 		next_win++;
 	}
