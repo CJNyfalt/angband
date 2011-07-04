@@ -2006,26 +2006,26 @@ errr Term_keypress(keycode_t k, byte mods)
  */
 errr Term_mousepress(int x, int y, char button)
 {
-  /* Store the char, advance the queue */
-  Term->key_queue[Term->key_head].type = EVT_MOUSE;
-  Term->key_queue[Term->key_head].mouse.x = x;
-  Term->key_queue[Term->key_head].mouse.y = y;
-  Term->key_queue[Term->key_head].mouse.button = button;
-  Term->key_head++;
-  
-  /* Circular queue, handle wrap */
-  if (Term->key_head == Term->key_size) Term->key_head = 0;
-  
-  /* Success (unless overflow) */
-  if (Term->key_head != Term->key_tail) return (0);
-  
+	/* Store the char, advance the queue */
+	Term->key_queue[Term->key_head].type = EVT_MOUSE;
+	Term->key_queue[Term->key_head].mouse.x = x;
+	Term->key_queue[Term->key_head].mouse.y = y;
+	Term->key_queue[Term->key_head].mouse.button = button;
+	Term->key_head++;
+
+	/* Circular queue, handle wrap */
+	if (Term->key_head == Term->key_size) Term->key_head = 0;
+
+	/* Success (unless overflow) */
+	if (Term->key_head != Term->key_tail) return (0);
+
 #if 0
-  /* Hack -- Forget the oldest key */
-  if (++Term->key_tail == Term->key_size) Term->key_tail = 0;
+	/* Hack -- Forget the oldest key */
+	if (++Term->key_tail == Term->key_size) Term->key_tail = 0;
 #endif
-  
-  /* Problem */
-  return (1);
+
+	/* Problem */
+	return (1);
 }
 
 

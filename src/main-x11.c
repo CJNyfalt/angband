@@ -1738,7 +1738,7 @@ static void react_keypress(XKeyEvent *ev)
  * Find the square a particular pixel is part of.
  */
 static void pixel_to_square(int * const x, int * const y,
-                            const int ox, const int oy)
+			    const int ox, const int oy)
 {
 	term_data *td = (term_data*)(Term->data);
 
@@ -1882,7 +1882,7 @@ static errr CheckEvent(bool wait)
 		/* Move and/or Resize */
 		case ConfigureNotify:
 		{
-                        int cols, rows, wid, hgt, force_resize;
+			int cols, rows, wid, hgt, force_resize;
 
 			int ox = Infowin->ox;
 			int oy = Infowin->oy;
@@ -1904,21 +1904,21 @@ static errr CheckEvent(bool wait)
 			if (window == 0)
 			{
 				/* Hack the main window must be at least 80x24 */
-                                force_resize = FALSE;
-                                if (cols < 80) { cols = 80; force_resize = TRUE; }
+				force_resize = FALSE;
+				if (cols < 80) { cols = 80; force_resize = TRUE; }
 				if (rows < 24) { rows = 24; force_resize = TRUE; }
 
-                                /* Resize the windows if any "change" is needed */
-                                if (force_resize)
-                                  {
-			/* Desired size of window */
-			wid = cols * td->tile_wid + (ox + ox);
-			hgt = rows * td->tile_hgt + (oy + oy);
+				/* Resize the windows if any "change" is needed */
+				if (force_resize)
+				{
+					/* Desired size of window */
+					wid = cols * td->tile_wid + (ox + ox);
+					hgt = rows * td->tile_hgt + (oy + oy);
 
-				/* Resize window */
-				Infowin_set(td->win);
-				Infowin_resize(wid, hgt);
-			}
+					/* Resize window */
+					Infowin_set(td->win);
+					Infowin_resize(wid, hgt);
+				}
 			}
 
 			/* Resize the Term (if needed) */
