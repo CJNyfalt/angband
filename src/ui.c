@@ -75,9 +75,9 @@ bool region_inside(const region *loc, const ui_event *key)
 /*** Text display ***/
 
 static void display_area(const char *text, const byte *attrs,
-		size_t *line_starts, size_t *line_lengths,
-		size_t n_lines,
-		region area, size_t line_from)
+			 size_t *line_starts, size_t *line_lengths,
+			 size_t n_lines,
+			 region area, size_t line_from)
 {
 	size_t i, j;
 
@@ -87,8 +87,8 @@ static void display_area(const char *text, const byte *attrs,
 		Term_erase(area.col, area.row + i, area.width);
 		for (j = 0; j < line_lengths[line_from + i]; j++) {
 			Term_putch(area.col + j, area.row + i,
-					attrs[line_starts[line_from + i] + j],
-					text[line_starts[line_from + i] + j]);
+				   attrs[line_starts[line_from + i] + j],
+				   text[line_starts[line_from + i] + j]);
 		}
 	}
 }
@@ -105,7 +105,7 @@ void textui_textblock_place(textblock *tb, region orig_area, const char *header)
 	size_t n_lines;
 
 	n_lines = textblock_calculate_lines(tb,
-			&line_starts, &line_lengths, area.width);
+					    &line_starts, &line_lengths, area.width);
 
 	area.page_rows--;
 
@@ -133,7 +133,7 @@ void textui_textblock_show(textblock *tb, region orig_area, const char *header)
 	size_t n_lines;
 
 	n_lines = textblock_calculate_lines(tb,
-			&line_starts, &line_lengths, area.width);
+					    &line_starts, &line_lengths, area.width);
 
 	screen_save();
 
@@ -148,14 +148,14 @@ void textui_textblock_show(textblock *tb, region orig_area, const char *header)
 
 		c_prt(TERM_WHITE, "", area.row + area.page_rows, area.col);
 		c_prt(TERM_L_BLUE, "(Up/down or ESCAPE to exit.)",
-				area.row + area.page_rows + 1, area.col);
+		      area.row + area.page_rows + 1, area.col);
 
 		/* Pager mode */
 		while (1) {
 			struct keypress ch;
 
 			display_area(text, attrs, line_starts, line_lengths, n_lines,
-					area, start_line);
+				     area, start_line);
 
 			ch = inkey();
 			if (ch.code == ARROW_UP)
@@ -177,7 +177,7 @@ void textui_textblock_show(textblock *tb, region orig_area, const char *header)
 
 		c_prt(TERM_WHITE, "", area.row + n_lines, area.col);
 		c_prt(TERM_L_BLUE, "(Press any key to continue.)",
-				area.row + n_lines + 1, area.col);
+		      area.row + n_lines + 1, area.col);
 		inkey();
 	}
 

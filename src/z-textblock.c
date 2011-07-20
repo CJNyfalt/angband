@@ -56,7 +56,7 @@ void textblock_free(textblock *tb)
 }
 
 static void textblock_vappend_c(textblock *tb, byte attr, const char *fmt,
-		va_list vp)
+				va_list vp)
 {
 	while (1)
 	{
@@ -128,17 +128,17 @@ const byte *textblock_attrs(textblock *tb)
 }
 
 static void new_line(size_t **line_starts, size_t **line_lengths,
-		size_t *n_lines, size_t *cur_line,
-		size_t start, size_t len)
+		     size_t *n_lines, size_t *cur_line,
+		     size_t start, size_t len)
 {
 	if (*cur_line == *n_lines) {
 		/* this number is not arbitrary: it's the height of a "standard" term */
 		(*n_lines) += 24;
 
 		*line_starts = mem_realloc(*line_starts,
-				*n_lines * sizeof **line_starts);
+					   *n_lines * sizeof **line_starts);
 		*line_lengths = mem_realloc(*line_lengths,
-				*n_lines * sizeof **line_lengths);
+					    *n_lines * sizeof **line_lengths);
 	}
 
 	(*line_starts)[*cur_line] = start;
@@ -153,7 +153,7 @@ static void new_line(size_t **line_starts, size_t **line_lengths,
  * \returns Number of lines in output.
  */
 size_t textblock_calculate_lines(textblock *tb,
-		size_t **line_starts, size_t **line_lengths, size_t width)
+				 size_t **line_starts, size_t **line_lengths, size_t width)
 {
 	const char *text = tb->text;
 
@@ -170,7 +170,7 @@ size_t textblock_calculate_lines(textblock *tb,
 	for (text_offset = 0; text_offset < len; text_offset++) {
 		if (text[text_offset] == '\n') {
 			new_line(line_starts, line_lengths, &n_lines, &cur_line,
-					line_start, line_length);
+				 line_start, line_length);
 
 			line_start = text_offset + 1;
 			line_length = 0;
@@ -187,7 +187,7 @@ size_t textblock_calculate_lines(textblock *tb,
 		/* special case: if we have a very long word, just slice it */
 		if (word_length == width) {
 			new_line(line_starts, line_lengths, &n_lines, &cur_line,
-					line_start, line_length);
+				 line_start, line_length);
 
 			line_start += line_length;
 			line_length = 0;
@@ -200,7 +200,7 @@ size_t textblock_calculate_lines(textblock *tb,
 				last_word_offset--;
 
 			new_line(line_starts, line_lengths, &n_lines, &cur_line,
-					line_start, last_word_offset);
+				 line_start, last_word_offset);
 
 			line_start += word_start;
 			line_length = word_length;
@@ -227,7 +227,7 @@ void textblock_to_file(textblock *tb, ang_file *f, int indent, int wrap_at)
 
 	for (i = 0; i < n_lines; i++) {
 		file_putf(f, "%*c%.*s\n",
-				indent, ' ',
-				line_lengths[i], tb->text + line_starts[i]);
+			  indent, ' ',
+			  line_lengths[i], tb->text + line_starts[i]);
 	}
 }

@@ -188,7 +188,7 @@ void messages_free(void);
 /**
  * Return the current number of messages stored.
  */
-u16b messages_num(void);	
+u16b messages_num(void);
 
 
 /** Individual message handling **/
@@ -243,7 +243,7 @@ byte message_color(u16b age);
 
 /**
  * Returns the colour for the message type `type`.
- */ 
+ */
 byte message_type_color(u16b type);
 
 /**

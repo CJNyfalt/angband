@@ -40,7 +40,7 @@ static Signal_Handler_t wrap_signal(int sig, Signal_Handler_t handler)
 	return signal(sig, handler);
 }
 
-/* Call this instead of calling signal() directly. */  
+/* Call this instead of calling signal() directly. */
 Signal_Handler_t (*signal_aux)(int, Signal_Handler_t) = wrap_signal;
 
 
@@ -201,7 +201,7 @@ static void handle_signal_abort(int sig)
 
 	/* Give a warning */
 	Term_putstr(0, 23, -1, TERM_RED,
-	            "A gruesome software bug LEAPS out at you!");
+		    "A gruesome software bug LEAPS out at you!");
 
 	/* Message */
 	Term_putstr(45, 23, -1, TERM_RED, "Panic save...");
