@@ -112,11 +112,11 @@ static const menu_iter menu_iter_actions =
 /* ------------------------------------------------------------------------
  * MN_STRINGS HELPER FUNCTIONS
  *
- * MN_STRINGS is the type of menu iterator that displays a simple list of 
+ * MN_STRINGS is the type of menu iterator that displays a simple list of
  * strings - no action is associated, as selection will just return the index.
  * ------------------------------------------------------------------------ */
 static void display_string(menu_type *m, int oid, bool cursor,
-		int row, int col, int width)
+			   int row, int col, int width)
 {
 	const char **items = menu_priv(m);
 	byte color = curs_attrs[CURS_KNOWN][0 != cursor];
@@ -125,7 +125,7 @@ static void display_string(menu_type *m, int oid, bool cursor,
 
 /* Virtual function table for displaying arrays of strings */
 const menu_iter menu_iter_strings =
-{ 
+{
 	NULL,              /* get_tag() */
 	NULL,              /* valid_row() */
 	display_string,    /* display_row() */
@@ -180,7 +180,7 @@ static void display_scrolling(menu_type *menu, int cursor, int *top, region *loc
 			/* Redraw the line if it's within the number of menu items */
 			bool is_curs = (i == cursor - *top);
 			display_menu_row(menu, i + *top, *top, is_curs, row + i, col,
-							loc->width);
+					 loc->width);
 		}
 	}
 
@@ -268,13 +268,13 @@ static void display_columns(menu_type *menu, int cursor, int *top, region *loc)
 
 			if (pos < n)
 				display_menu_row(menu, pos, 0, is_cursor,
-						row + r, col + c * colw, colw);
+						 row + r, col + c * colw, colw);
 		}
 	}
 
 	if (menu->cursor >= 0)
 		Term_gotoxy(col + (cursor / rows_per_page) * colw,
-				row + (cursor % rows_per_page) - *top);
+			    row + (cursor % rows_per_page) - *top);
 }
 
 static char column_get_tag(menu_type *menu, int pos)
@@ -338,7 +338,7 @@ static bool is_valid_row(menu_type *menu, int cursor)
 	return TRUE;
 }
 
-/* 
+/*
  * Return a new position in the menu based on the key
  * pressed and the flags and various handler functions.
  */
@@ -400,7 +400,7 @@ static int get_cursor_key(menu_type *menu, int top, struct keypress key)
 
 /* Modal display of menu */
 static void display_menu_row(menu_type *menu, int pos, int top,
-                             bool cursor, int row, int col, int width)
+			     bool cursor, int row, int col, int width)
 {
 	int flags = menu->flags;
 	char sel = 0;
@@ -449,15 +449,15 @@ void menu_refresh(menu_type *menu, bool reset_screen)
 
 	if (menu->title)
 		Term_putstr(menu->boundary.col, menu->boundary.row,
-				loc->width, TERM_WHITE, menu->title);
+			    loc->width, TERM_WHITE, menu->title);
 
 	if (menu->header)
 		Term_putstr(loc->col, loc->row - 1, loc->width,
-				TERM_WHITE, menu->header);
+			    TERM_WHITE, menu->header);
 
 	if (menu->prompt)
 		Term_putstr(menu->boundary.col, loc->row + loc->page_rows,
-				loc->width, TERM_WHITE, menu->prompt);
+			    loc->width, TERM_WHITE, menu->prompt);
 
 	if (menu->browse_hook && oid >= 0)
 		menu->browse_hook(oid, menu->menu_data, loc);
@@ -470,12 +470,12 @@ void menu_refresh(menu_type *menu, bool reset_screen)
 
 /*
  * Handle mouse input in a menu.
- * 
+ *
  * Mouse output is either moving, selecting, escaping, or nothing.  Returns
  * TRUE if something changes as a result of the click.
  */
 bool menu_handle_mouse(menu_type *menu, const ui_event *in,
-		ui_event *out)
+		       ui_event *out)
 {
 	int new_cursor;
 
@@ -483,7 +483,7 @@ bool menu_handle_mouse(menu_type *menu, const ui_event *in,
 	{
 		/* A click to the left of the active region is 'back' */
 		if (!region_inside(&menu->active, in) &&
-				in->mouse.x < menu->active.col)
+		    in->mouse.x < menu->active.col)
 			out->type = EVT_ESCAPE;
 	}
 	else
@@ -491,8 +491,8 @@ bool menu_handle_mouse(menu_type *menu, const ui_event *in,
 		int count = menu->filter_list ? menu->filter_count : menu->count;
 
 		new_cursor = menu->skin->get_cursor(in->mouse.y, in->mouse.x,
-				count, menu->top, &menu->active);
-	
+						    count, menu->top, &menu->active);
+
 		if (is_valid_row(menu, new_cursor))
 		{
 			if (new_cursor == menu->cursor || !(menu->flags & MN_DBL_TAP))
@@ -536,7 +536,7 @@ static bool menu_handle_action(menu_type *m, const ui_event *in)
  * whether any action was taken.
  */
 bool menu_handle_keypress(menu_type *menu, const ui_event *in,
-		ui_event *out)
+			  ui_event *out)
 {
 	bool eat = FALSE;
 	int count = menu->filter_list ? menu->filter_count : menu->count;
@@ -573,7 +573,7 @@ bool menu_handle_keypress(menu_type *menu, const ui_event *in,
 			menu->cursor += menu->active.page_rows;
 			if (menu->cursor >= total - 1) menu->cursor = 0;
 			menu->top = menu->cursor;
-	
+
 			out->type = EVT_MOVE;
 		}
 		else
@@ -606,7 +606,7 @@ bool menu_handle_keypress(menu_type *menu, const ui_event *in,
 					else
 						menu->cursor += ddy[dir];
 				}
-			
+
 				assert(menu->cursor >= 0);
 				assert(menu->cursor < count);
 			}
@@ -617,7 +617,7 @@ bool menu_handle_keypress(menu_type *menu, const ui_event *in,
 }
 
 
-/* 
+/*
  * Run a menu.
  *
  * If popup is true, the screen is saved before the menu is drawn, and
@@ -648,8 +648,8 @@ ui_event menu_select(menu_type *menu, int notify, bool popup)
 			menu_handle_mouse(menu, &in, &out);
 		} else if (in.type == EVT_KBRD) {
 			if (!no_act && menu->cmd_keys &&
-					strchr(menu->cmd_keys, (char)in.key.code) &&
-					menu_handle_action(menu, &in))
+			    strchr(menu->cmd_keys, (char)in.key.code) &&
+			    menu_handle_action(menu, &in))
 				continue;
 
 			menu_handle_keypress(menu, &in, &out);
@@ -845,7 +845,7 @@ struct menu_entry {
 };
 
 static void dynamic_display(menu_type *m, int oid, bool cursor,
-		int row, int col, int width)
+			    int row, int col, int width)
 {
 	struct menu_entry *entry;
 	byte color = curs_attrs[CURS_KNOWN][0 != cursor];
@@ -927,7 +927,7 @@ int menu_dynamic_select(menu_type *m)
 	for (entry = menu_priv(m); cursor; cursor--) {
 		entry = entry->next;
 		assert(entry);
-	}	
+	}
 
 	return entry->value;
 }

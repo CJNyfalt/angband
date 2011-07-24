@@ -92,8 +92,8 @@ static size_t highscore_read(high_score scores[], size_t sz)
 	if (!scorefile) return TRUE;
 
 	for (i = 0; i < sz &&
-			file_read(scorefile, (char *)&scores[i], sizeof(high_score)) > 0;
-			i++)
+		     file_read(scorefile, (char *)&scores[i], sizeof(high_score)) > 0;
+	     i++)
 		;
 
 	file_close(scorefile);
@@ -311,10 +311,10 @@ static void display_scores_aux(const high_score scores[], int from, int to, int 
 
 			/* Dump some info */
 			strnfmt(out_val, sizeof(out_val),
-			        "%3d.%9s  %s the %s %s, Level %d",
-			        place, score->pts, score->who,
-			        r ? r->name : "<none>", c ? c->name : "<none>",
-			        clev);
+				"%3d.%9s  %s the %s %s, Level %d",
+				place, score->pts, score->who,
+				r ? r->name : "<none>", c ? c->name : "<none>",
+				clev);
 
 			/* Append a "maximum level" */
 			if (mlev > clev) my_strcat(out_val, format(" (Max %d)", mlev), sizeof(out_val));
