@@ -167,6 +167,7 @@ install: $(EXE) $(ICONFILES) $(PLIST) $(LIBFILES)
 	@cp ../lib/help/*.txt $(APPRES)/lib/help
 	@cp ../lib/help/*.hlp $(APPRES)/lib/help
 	@cp ../lib/pref/*.prf $(APPRES)/lib/pref
+	@cp ../lib/xtra/graf/*.txt $(APPRES)/lib/xtra/graf
 
 	# 'optionally' install sound and graphics tiles, if present
 	-cp $(TILES) $(APPRES)/lib/xtra/graf
@@ -194,10 +195,13 @@ PACKAGE_NAME = $(NAME)-$(VERSION)
 
 # In the unlikely event that tar+zip isn't enough...
 
-dist: install
+../doc/manual/manual.pdf:
+	$(MAKE) -C ../doc/manual manual
+
+dist: install ../doc/manual/manual.pdf
 	@rm -rf disttemp*
 	mkdir -p disttemp/Docs
-	cp ../changes.txt ../copying.txt ../faq.txt ../readme.txt disttemp/Docs
+	cp ../changes.txt ../copying.txt ../faq.txt ../readme.txt ../doc/manual/manual.pdf disttemp/Docs
 	cp -R -p "$(APPBNDL)" disttemp
 	SetFile -a B disttemp/$(APPNAME)
 

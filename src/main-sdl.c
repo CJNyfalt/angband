@@ -348,36 +348,15 @@ static bool Sizingshow = FALSE;	/* Is the resize thingy displayed? */
 static SDL_Rect SizingRect;		/* Rect to describe the current resize window */
 
 #ifdef USE_GRAPHICS
-typedef struct GfxInfo GfxInfo;
-struct GfxInfo
-{
-	const char *name;				/* Name to show on button */
-	const char *gfxfile;			/* The file with tiles */
-	int width;				/* Width of a tile */
-	int height;				/* Height of a tile */
-	const char *pref;				/* Preference file to use */
-	bool avail;				/* Are the appropriate files available? */
-};
+#include "grafmode.h"
 
 static SDL_Surface *GfxSurface = NULL;	/* A surface for the graphics */
-
-#define GfxModes 5
-static GfxInfo GfxDesc[GfxModes] =
-{
-	{"None", NULL, -1, -1, NULL, TRUE},
-	{"8x8", "8x8.png", 8, 8, "old", TRUE},
-	{"16x16", "16x16.png", 16, 16, "new", TRUE},
-	{"32x32", "32x32.png", 32, 32, "david", TRUE},
-	{"8x16", "8x16.png", 16, 16, "nomad", TRUE},
-	/* XXX (GRAPHICS_PSEUDO ???) */
-};
-
 
 static int MoreWidthPlus;	/* Increase tile width */
 static int MoreWidthMinus;	/* Decrease tile width */
 static int MoreHeightPlus;	/* Increase tile height */
 static int MoreHeightMinus;	/* Decrease tile height */
-static int GfxButtons[GfxModes];	/* Graphics mode buttons */
+static int *GfxButtons;	/* Graphics mode buttons */
 static int SelectedGfx;				/* Current selected gfx */
 #endif
 
@@ -1073,6 +1052,10 @@ static void hook_quit(const char *str)
 	/* Free the graphics surface */
 	if (GfxSurface) SDL_FreeSurface(GfxSurface);
 #endif
+
+	close_graphics_modes();
+	/*if (GfxButtons) FREE(GfxButtons);*/
+
 	/* Free the 'System font' */
 	sdl_FontFree(&SystemFont);
 	
@@ -1511,6 +1494,7 @@ static void AcceptChanges(sdl_Button *sender)
 	}
 	else
 	{
+		current_graphics_mode = NULL;
 		arg_graphics = FALSE;
 		tile_width = 1;
 		tile_height = 1;
@@ -1663,20 +1647,24 @@ static void MoreDraw(sdl_Window *win)
 	}
 
 	sdl_WindowText(win, colour, 20, y, "Selected Graphics:");
-	sdl_WindowText(win, SDL_MapRGB(win->surface->format, 210, 110, 110),
-				   200, y, GfxDesc[SelectedGfx].name);
-
+	if (current_graphics_mode) {
+		sdl_WindowText(win, SDL_MapRGB(win->surface->format, 210, 110, 110),
+					   200, y, current_graphics_mode->menuname);
+	} else {
+		sdl_WindowText(win, SDL_MapRGB(win->surface->format, 210, 110, 110),
+					   200, y, "None");
+	}
 	y += 20;
 
 	sdl_WindowText(win, colour, 20, y, "Available Graphics:");
 	
-	for (i = 0; i < GfxModes; i++)
-	{
-		if (!GfxDesc[i].avail) continue;
-		button = sdl_ButtonBankGet(&win->buttons, GfxButtons[i]);
+	i=0;
+	do {
+		if (!graphics_modes[i].menuname[0]) continue;
+		button = sdl_ButtonBankGet(&win->buttons, GfxButtons[graphics_modes[i].grafID]);
 		sdl_ButtonMove(button, 200, y);
 		y += 20;
-	}
+	} while (graphics_modes[i++].grafID != 0); 
 #endif	
 
 	button = sdl_ButtonBankGet(&win->buttons, MoreFullscreen);
@@ -1758,20 +1746,20 @@ static void MoreActivate(sdl_Button *sender)
 	
 	SelectedGfx = use_graphics;
 	
-	for (i = 0; i < GfxModes; i++)
-	{
-		if (!GfxDesc[i].avail) continue;
-		GfxButtons[i] = sdl_ButtonBankNew(&PopUp.buttons);
-		button = sdl_ButtonBankGet(&PopUp.buttons, GfxButtons[i]);
+	i = 0;
+	do {
+		if (!graphics_modes[i].menuname[0]) continue;
+		GfxButtons[graphics_modes[i].grafID] = sdl_ButtonBankNew(&PopUp.buttons);
+		button = sdl_ButtonBankGet(&PopUp.buttons, GfxButtons[graphics_modes[i].grafID]);
 		
 		button->unsel_colour = ucolour;
 		button->sel_colour = scolour;
 		sdl_ButtonSize(button, 50 , PopUp.font.height + 2);
 		sdl_ButtonVisible(button, TRUE);
-		sdl_ButtonCaption(button, GfxDesc[i].name);
-		button->tag = i;
+		sdl_ButtonCaption(button, graphics_modes[i].menuname);
+		button->tag = graphics_modes[i].grafID;
 		button->activate = SelectGfx;
-	}
+	} while (graphics_modes[i++].grafID != 0); 
 #endif
 	MoreFullscreen = sdl_ButtonBankNew(&PopUp.buttons);
 	button = sdl_ButtonBankGet(&PopUp.buttons, MoreFullscreen);
@@ -3089,11 +3077,15 @@ static errr sdl_BuildTileset(term_window *win)
 	int x, y;
 	int ta, td;
 	int xx, yy;
-	GfxInfo *info = &GfxDesc[use_graphics];
-	
+	graphics_mode *info;
+
+	if (!GfxSurface) return (1);
+
+	info = get_graphics_mode(use_graphics);
+
 	/* Calculate the number of tiles across & down*/
-	ta = GfxSurface->w / info->width;
-	td = GfxSurface->h / info->height;
+	ta = GfxSurface->w / info->cell_width;
+	td = GfxSurface->h / info->cell_height;
 	
 	/* Calculate the size of the new surface */
 	x = ta * win->tile_wid * tile_width;
@@ -3109,16 +3101,15 @@ static errr sdl_BuildTileset(term_window *win)
 	if (!win->tiles) return (1);
 	
 	/* For every tile... */
-	for (xx = 0; xx < ta; xx++)
-	{
-		for (yy = 0; yy < td; yy++)
-		{
+	for (xx = 0; xx < ta; xx++) {
+		for (yy = 0; yy < td; yy++) {
 			SDL_Rect src, dest;
-                        int dwid = win->tile_wid * tile_width;
-                        int dhgt = win->tile_hgt * tile_height;
+			int dwid = win->tile_wid * tile_width;
+			int dhgt = win->tile_hgt * tile_height;
 
 			/* Source rectangle (on GfxSurface) */
-			RECT(xx * info->width, yy * info->height, info->width, info->height, &src);
+			RECT(xx * info->cell_width, yy * info->cell_height,
+				 info->cell_width, info->cell_height, &src);
 
 			/* Destination rectangle (win->tiles) */
 			RECT(xx * dwid, yy * dhgt, dwid, dhgt, &dest);
@@ -3341,14 +3332,21 @@ static void init_morewindows(void)
 static errr load_gfx(void)
 {
 	char buf[1024];
-	const char *filename = GfxDesc[use_graphics].gfxfile;
+	const char *filename;
 	SDL_Surface *temp;
 
-	/* This may be called when GRAPHICS_NONE is set */
-	if (!filename) return (0);
+	current_graphics_mode = get_graphics_mode(use_graphics);
+	if (current_graphics_mode) {
+		filename = current_graphics_mode->file;
+	} else {
+		filename = NULL;
+	}
 
 	/* Free the old surface */
 	if (GfxSurface) SDL_FreeSurface(GfxSurface);
+
+	/* This may be called when GRAPHICS_NONE is set */
+	if (!filename) return (0);
 
 	/* Find and load the file into a temporary surface */
 	path_build(buf, sizeof(buf), ANGBAND_DIR_XTRA_GRAF, filename);
@@ -3359,7 +3357,7 @@ static errr load_gfx(void)
 	GfxSurface = SDL_DisplayFormatAlpha(temp);
 
 	/* Make sure we know what pref file to use */
-	ANGBAND_GRAF = GfxDesc[use_graphics].pref;
+	ANGBAND_GRAF = current_graphics_mode->pref;
 
 	/* Reset the graphics mapping for this tileset */
 	if (character_dungeon) reset_visuals(TRUE);
@@ -3384,31 +3382,31 @@ static void init_gfx(void)
 	/* Make sure */
 	use_graphics = GRAPHICS_NONE;
 	tile_width = 1;
-        tile_height = 1;
+	tile_height = 1;
 #else
-	GfxInfo *info = &GfxDesc[use_graphics];
 	int i;
 	
 	/* Check for existence of required files */
-	for (i = 0; i < GfxModes; i++)
-	{
+	i = 0;
+	do {
 		char path[1024];
 		
 		/* Check the graphic file */
-		if (GfxDesc[i].gfxfile)
-		{
-			path_build(path, sizeof(path), ANGBAND_DIR_XTRA_GRAF, GfxDesc[i].gfxfile);
+		if (graphics_modes[i].file[0]) {
+			path_build(path, sizeof(path), ANGBAND_DIR_XTRA_GRAF, graphics_modes[i].file);
 
-			if (!file_exists(path))
-			{
-				plog_fmt("Can't find file %s - graphics mode '%s' will be disabled.", path, GfxDesc[i].name);
-				GfxDesc[i].avail = FALSE;
+			if (!file_exists(path)) {
+				plog_fmt("Can't find file %s - graphics mode '%s' will be disabled.", path, graphics_modes[i].menuname);
+				graphics_modes[i].file[0] = 0;
+			}
+			if (i == use_graphics) {
+				current_graphics_mode = &(graphics_modes[i]);
 			}
 		}
-	}
+	} while (graphics_modes[i++].grafID != 0); 
 	
 	/* Check availability (default to no graphics) */
-	if (!info->avail)
+	if (!current_graphics_mode->file[0])
 	{
 		use_graphics = GRAPHICS_NONE;
 		arg_graphics = FALSE;
@@ -3595,8 +3593,7 @@ static void init_paths(void)
 	if (!dir) return;
 
 	/* Read every font to the limit */
-	while (my_dread(dir, buf, sizeof buf))
-	{
+	while (my_dread(dir, buf, sizeof buf)) {
 		/* Check for file extension */
 		if (suffix(buf, ".fon"))
 			FontList[num_fonts++] = string_make(buf);
@@ -3634,6 +3631,10 @@ int init_sdl(int argc, char *argv[])
 
 	/* Init some extra paths */
 	init_paths();
+	
+	/* load possible graphics modes */
+	init_graphics_modes("graphics.txt");
+	GfxButtons = mem_zalloc(sizeof(int) * graphics_mode_high_id);
 	
 	/* Load prefs */
 	load_prefs();

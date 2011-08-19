@@ -19,6 +19,7 @@
 #include "angband.h"
 #include "buildid.h"
 #include "player/player.h"
+#include "grafmode.h"
 
 #ifdef USE_GTK
 #include "main-gtk.h"
@@ -744,6 +745,7 @@ static void hook_quit(const char *str)
 {
 	gtk_log_fmt(TERM_RED,"%s", str);
 	save_prefs();
+	close_graphics_modes();
 	release_memory();
 	exit(0);
 }
@@ -753,6 +755,7 @@ gboolean quit_event_handler(GtkWidget *widget, GdkEventButton *event, gpointer u
 	if (save_game_gtk())
 	{
 		save_prefs();
+		close_graphics_modes();
 		quit(NULL);
 		exit(0);
 		return(FALSE);
@@ -763,6 +766,7 @@ gboolean quit_event_handler(GtkWidget *widget, GdkEventButton *event, gpointer u
 
 gboolean destroy_event_handler(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 {
+	close_graphics_modes();
 	quit(NULL);
 	exit(0);
 	return(FALSE);
@@ -1068,18 +1072,46 @@ gboolean keypress_event_handler(GtkWidget *widget, GdkEventKey *event, gpointer 
 		case GDK_Insert: ch = KC_INSERT; break;
 
 		/* keypad */
+		case GDK_KP_Insert:
+		case GDK_KP_End:
+		case GDK_KP_Down:
+		case GDK_KP_Page_Down:
+		case GDK_KP_Left:
+		case GDK_KP_Right:
+		case GDK_KP_Home:
+		case GDK_KP_Up:
+		case GDK_KP_Page_Up:
+		case GDK_KP_Decimal:
+		case GDK_KP_Divide:
+		case GDK_KP_Multiply:
+		case GDK_KP_Subtract:
+		case GDK_KP_Add:
+		case GDK_KP_Enter:
+		case GDK_KP_Equal:
+			switch(event->keyval) {
+				case GDK_KP_Insert: ch = '0'; break;
+				case GDK_KP_End: ch = '1'; break;
+				case GDK_KP_Down: ch = '2'; break;
+				case GDK_KP_Page_Down: ch = '3'; break;
+				case GDK_KP_Left: ch = '4'; break;
+				case GDK_KP_Right: ch = '6'; break;
+				case GDK_KP_Home: ch = '7'; break;
+				case GDK_KP_Up: ch = '8'; break;
+				case GDK_KP_Page_Up: ch = '9'; break;
+				case GDK_KP_Decimal: ch = '.'; break;
+				case GDK_KP_Divide: ch = '/'; break;
+				case GDK_KP_Multiply: ch = '*'; break;
+				case GDK_KP_Subtract: ch = '-'; break;
+				case GDK_KP_Add: ch = '+'; break;
+				case GDK_KP_Enter: ch = '\n';break;
+				case GDK_KP_Equal: ch = '='; break;
+			}
+
+		/* intentional fall-though */
 		case GDK_KP_0: case GDK_KP_1: case GDK_KP_2:
 		case GDK_KP_3: case GDK_KP_4: case GDK_KP_5:
 		case GDK_KP_6: case GDK_KP_7: case GDK_KP_8:
 		case GDK_KP_9: kp = TRUE; break;
-
-		case GDK_KP_Decimal: ch = '.'; kp = TRUE; break;
-		case GDK_KP_Divide: ch = '/'; kp = TRUE; break;
-		case GDK_KP_Multiply: ch = '*'; kp = TRUE; break;
-		case GDK_KP_Subtract: ch = '-'; kp = TRUE; break;
-		case GDK_KP_Add: ch = '+'; kp = TRUE; break;
-		case GDK_KP_Enter: ch = '\n'; kp = TRUE; break;
-		case GDK_KP_Equal: ch = '='; kp = TRUE; break;
 
 		case GDK_F1: ch = KC_F1; break;
 		case GDK_F2: ch = KC_F2; break;
@@ -1636,56 +1668,17 @@ static void init_graf(int g)
 	term_data *td= &data[0];
 	int i = 0;
 	
-	arg_graphics = g;
-	
-	switch(arg_graphics)
-	{
-		case GRAPHICS_NONE:
-		{
-			ANGBAND_GRAF = "none";
-			
+	do {
+		if (g == graphics_modes[i].grafID) {
+			arg_graphics = g;
+			ANGBAND_GRAF = graphics_modes[i].pref;
+			path_build(buf, sizeof(buf), ANGBAND_DIR_XTRA_GRAF, graphics_modes[i].file);
 			use_transparency = FALSE;
-			td->tile.w = td->font.w;
-			td->tile.h = td-> font.h;
+			td->tile.w = graphics_modes[i].cell_width;
+			td->tile.h = graphics_modes[i].cell_height;
 			break;
 		}
-
-		case GRAPHICS_ORIGINAL:
-		{
-			ANGBAND_GRAF = "old";
-			path_build(buf, sizeof(buf), ANGBAND_DIR_XTRA_GRAF, "8x8.png");
-			use_transparency = FALSE;
-			td->tile.w = td->tile.h = 8;
-			break;
-		}
-
-		case GRAPHICS_ADAM_BOLT:
-		{
-			ANGBAND_GRAF = "new";
-			path_build(buf, sizeof(buf), ANGBAND_DIR_XTRA_GRAF, "16x16.png");
-			use_transparency = TRUE;
-			td->tile.w = td->tile.h =16;
-			break;
-		}
-
-		case GRAPHICS_NOMAD:
-		{
-			ANGBAND_GRAF = "nomad";
-			path_build(buf, sizeof(buf), ANGBAND_DIR_XTRA_GRAF, "8x16.png");
-			use_transparency = TRUE;
-			td->tile.w = td->tile.h =16;
-			break;
-		}
-
-		case GRAPHICS_DAVID_GERVAIS:
-		{
-			ANGBAND_GRAF = "david";
-			path_build(buf, sizeof(buf), ANGBAND_DIR_XTRA_GRAF, "32x32.png");
-			use_transparency = FALSE;
-			td->tile.w = td->tile.h =32;
-			break;
-		}
-	}
+	} while (graphics_modes[i++].grafID != 0);
 
 	/* Free up old graphics */
 	if (graphical_tiles != NULL) cairo_surface_destroy(graphical_tiles);
@@ -2088,12 +2081,8 @@ static errr term_data_init(term_data *td, int i)
 
 static errr get_init_cmd(bool wait)
 {
-	Term_fresh();
-
-	/* Prompt the user */
 	prt("[Choose 'New' or 'Open' from the 'File' menu]", 23, 17);
 	CheckEvent(wait);
-
 	return 0;
 }
 
@@ -2719,6 +2708,9 @@ errr init_gtk(int argc, char **argv)
 	game_saved = FALSE;
 	toolbar_size = 0;
 	
+	/* Initialize to ASCII tileset (to be overriden by prefs) */
+	arg_graphics = 0;
+
 	/* Initialize the environment */
 	ok = gtk_init_check(&argc, &argv);
 	if (ok == FALSE) return -1;
@@ -2766,6 +2758,9 @@ errr init_gtk(int argc, char **argv)
 
 	/* Init dirs */
 	create_needed_dirs();	
+
+  /* load possible graphics modes */
+  init_graphics_modes("graphics.txt");
 	
 	/* Load Preferences */
 	load_prefs();

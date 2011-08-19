@@ -3,6 +3,8 @@
  * Purpose: A Random Number Generator for Angband
  *
  * Copyright (c) 1997 Ben Harrison, Randy Hutson
+ * 
+ * See below for copyright on the WELL random number generator.
  *
  * This work is free software; you can redistribute it and/or modify it
  * under the terms of either:
@@ -468,4 +470,18 @@ bool randcalc_varies(random_value v) {
 void rand_fix(u32b val) {
 	rand_fixed = TRUE;
 	rand_fixval = val;
+}
+
+int getpid(void);
+
+/**
+ * Another simple RNG that does not use any of the above state
+ * (so can be used without disturbing the game's RNG state)
+ */
+u32b Rand_simple(u32b m) {
+	static time_t seed;
+	time_t v;
+	v = time(NULL);
+	seed = LCRNG(seed) + ((v << 16) ^ v ^ getpid());
+	return (seed%m);
 }

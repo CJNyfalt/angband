@@ -2,12 +2,12 @@ MKPATH=mk/
 include $(MKPATH)buildsys.mk
 
 SUBDIRS = src lib
+CLEAN = config.status config.log *.dll *.exe
 
-.PHONY: tests
+.PHONY: tests manual
 tests:
 	$(MAKE) -C src tests
 
-clean-posthook:
-	-rm config.status config.log
-	-rm *.dll
-	-rm angband.exe
+manual:
+	$(MAKE) -C doc/manual manual
+
